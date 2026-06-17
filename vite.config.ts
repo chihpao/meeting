@@ -3,7 +3,11 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
+  base: '/meeting/',
   plugins: [react(), tailwindcss()],
+  build: {
+    outDir: 'docs',
+  },
   server: {
     proxy: {
       '/api/anthropic': {
