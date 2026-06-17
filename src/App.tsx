@@ -69,7 +69,7 @@ function App() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <header className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
-            會議記錄產生器
+            📋 會議記錄產生器
           </h1>
           <p className="text-gray-500 mt-2">
             貼上逐字稿或上傳錄音，AI 自動產生結構化會議記錄
