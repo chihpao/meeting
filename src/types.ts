@@ -1,24 +1,23 @@
-export interface ActionItem {
-  owner: string;
-  deadline: string;
-  priority: string;
-  task: string;
+export interface DiscussionItem {
+  topic: string;
+  content: string;
+  resolution: string;
 }
 
-export interface Risk {
-  description: string;
-  level: string;
-  mitigation: string;
+export interface ActionItem {
+  unit: string;
+  task: string;
+  deadline: string;
 }
 
 export interface MeetingResult {
-  title: string;
+  project_name: string;
+  meeting_type: string;
   date: string;
+  location: string;
+  host: string;
   attendees: string[];
-  summary: string;
-  discussion_points: string[];
-  decisions: string[];
+  discussion: DiscussionItem[];
   action_items: ActionItem[];
-  risks: Risk[];
-  next_meeting: string;
+  follow_up: string;
 }

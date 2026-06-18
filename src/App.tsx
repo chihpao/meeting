@@ -1,44 +1,43 @@
 import { useState } from 'react';
 import TranscriptInput from './components/TranscriptInput';
 import MeetingResult from './components/MeetingResult';
-import ActionItemsTable from './components/ActionItemsTable';
-import RisksCard from './components/RisksCard';
 import CopyButton from './components/CopyButton';
+import DownloadDocxButton from './components/DownloadDocxButton';
 import { analyzeTranscript } from './services/claude';
 import type { MeetingResult as MeetingResultType } from './types';
 
 function formatFullText(result: MeetingResultType): string {
   const sections: string[] = [];
 
-  sections.push(`# ${result.title}`);
-  sections.push(`日期：${result.date}`);
+  sections.push(result.project_name);
+  sections.push(`${result.meeting_type} 會議紀錄`);
   sections.push('');
-  sections.push('## 與會者');
-  result.attendees.forEach((a) => sections.push(`- ${a}`));
+  sections.push('壹、開會時間：');
+  sections.push(result.date);
   sections.push('');
-  sections.push('## 摘要');
-  sections.push(result.summary);
+  sections.push('貳、開會地點：');
+  sections.push(result.location);
   sections.push('');
-  sections.push('## 討論重點');
-  result.discussion_points.forEach((p) => sections.push(`- ${p}`));
+  sections.push('參、主持人：');
+  sections.push(result.host);
   sections.push('');
-  sections.push('## 決議');
-  result.decisions.forEach((d) => sections.push(`- ${d}`));
+  sections.push('肆、出席單位及人員：');
+  result.attendees.forEach((a) => sections.push(a));
   sections.push('');
-  sections.push('## 待辦事項');
+  sections.push('伍、討論事項：');
+  result.discussion.forEach((d, i) => {
+    sections.push(`${i + 1}. ${d.topic}`);
+    sections.push(`   內容：${d.content}`);
+    sections.push(`   決議：${d.resolution}`);
+    sections.push('');
+  });
+  sections.push('陸、待辦事項與待提供文件：');
   result.action_items.forEach((ai) =>
-    sections.push(
-      `- [${ai.priority}] ${ai.task} | 負責人：${ai.owner} | 截止日：${ai.deadline}`,
-    ),
+    sections.push(`- [${ai.unit}] ${ai.task} | 期限：${ai.deadline}`),
   );
   sections.push('');
-  sections.push('## 風險');
-  result.risks.forEach((r) =>
-    sections.push(`- [${r.level}] ${r.description} — 因應對策：${r.mitigation}`),
-  );
-  sections.push('');
-  sections.push('## 下次會議');
-  sections.push(result.next_meeting);
+  sections.push('柒、後續安排：');
+  sections.push(result.follow_up);
 
   return sections.join('\n');
 }
@@ -49,15 +48,16 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (transcript: string) => {
+  const handleSubmit = async (transcript: string, refText: string) => {
     setLoading(true);
     setError('');
     setResult(null);
     try {
-      const data = await analyzeTranscript(transcript);
+      const data = await analyzeTranscript(transcript, refText || undefined);
       setRawJson(JSON.stringify(data, null, 2));
       setResult(data);
     } catch (e) {
+      console.error('=== API ERROR ===', JSON.stringify(e));
       setError(e instanceof Error ? e.message : 'Unknown error');
     } finally {
       setLoading(false);
@@ -87,9 +87,19 @@ function App() {
         {result && (
           <div className="mt-8 space-y-0">
             <MeetingResult result={result} rawJson={rawJson} />
-            <ActionItemsTable items={result.action_items} />
-            <RisksCard risks={result.risks} />
-            <CopyButton text={formatFullText(result)} />
+            <div className="flex gap-4 mt-4">
+              <div className="flex-1">
+                <CopyButton text={formatFullText(result)} />
+              </div>
+              <div className="flex-1">
+                <DownloadDocxButton
+                  onDownload={async () => {
+                    const { downloadDocx } = await import('./services/docxGenerator');
+                    await downloadDocx(result);
+                  }}
+                />
+              </div>
+            </div>
           </div>
         )}
       </div>
